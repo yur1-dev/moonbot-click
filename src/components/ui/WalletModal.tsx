@@ -135,9 +135,11 @@ export const WalletModal: FC = () => {
       await connect(walletName);
       setIsOpen(false);
       showNotification(`Successfully connected to ${walletName}!`, "success");
-    } catch (err: any) {
-      console.error("Connection error in component:", err);
-      showNotification(err.message || "Failed to connect wallet", "error");
+    } catch (error) {
+      console.error("Connection error in component:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to connect wallet";
+      showNotification(errorMessage, "error");
     }
   };
 
@@ -152,7 +154,8 @@ export const WalletModal: FC = () => {
     try {
       await refreshBalance();
       showNotification("Balance updated successfully", "success");
-    } catch (err) {
+    } catch (error) {
+      console.error("Refresh balance error:", error);
       showNotification("Failed to refresh balance", "error");
     } finally {
       setIsRefreshing(false);

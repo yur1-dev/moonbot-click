@@ -4,8 +4,8 @@ export interface SolanaProvider {
     onlyIfTrusted?: boolean;
   }) => Promise<{ publicKey: { toString(): string } }>;
   disconnect: () => Promise<void>;
-  on: (event: string, callback: (args: any) => void) => void;
-  off?: (event: string, callback: (args: any) => void) => void;
+  on: (event: string, callback: (args: unknown) => void) => void;
+  off?: (event: string, callback: (args: unknown) => void) => void;
   publicKey?: { toString(): string };
   isConnected?: boolean;
 }
@@ -16,8 +16,8 @@ export interface SolflareProvider {
     onlyIfTrusted?: boolean;
   }) => Promise<{ publicKey: { toString(): string } }>;
   disconnect: () => Promise<void>;
-  on?: (event: string, callback: (args: any) => void) => void;
-  off?: (event: string, callback: (args: any) => void) => void;
+  on?: (event: string, callback: (args: unknown) => void) => void;
+  off?: (event: string, callback: (args: unknown) => void) => void;
   publicKey?: { toString(): string };
   isConnected?: boolean;
 }
@@ -46,5 +46,5 @@ export interface WalletInfo {
 export interface WalletError {
   code?: number;
   message: string;
-  data?: any;
+  data?: unknown;
 }

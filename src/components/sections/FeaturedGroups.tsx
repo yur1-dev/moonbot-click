@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const groups = [
   {
@@ -43,9 +44,11 @@ export default function FeaturedGroups() {
             >
               <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <img
+                  <Image
                     src={g.avatar || "/placeholder.svg"}
                     alt={g.name}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full"
                   />
                   <div>

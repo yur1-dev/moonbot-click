@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 
 // Token logo component with fallback
 function TokenLogo({
@@ -46,9 +47,11 @@ function TokenLogo({
       {imageLoading && (
         <div className="absolute inset-0 bg-gray-700 rounded-full animate-pulse"></div>
       )}
-      <img
+      <Image
         src={token.logoUrl || "/placeholder.svg"}
         alt={`${token.name} logo`}
+        width={40}
+        height={40}
         className={`w-10 h-10 rounded-full object-cover shadow-md transition-all duration-200 ${
           imageLoading ? "opacity-0" : "opacity-100"
         }`}

@@ -1,6 +1,12 @@
 "use client";
 import type React from "react";
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import type { WalletInfo, WalletType } from "@/types/wallet";
 
 interface WalletContextType {
@@ -76,11 +82,14 @@ const connectPhantom = async (): Promise<WalletInfo> => {
       username: null,
       explorer: "https://explorer.solana.com",
     };
-  } catch (error: any) {
-    if (error.code === 4001) {
+  } catch (error) {
+    const err = error as { code?: number; message?: string };
+    if (err.code === 4001) {
       throw new Error("User rejected the connection request");
     }
-    throw new Error(`Phantom connection failed: ${error.message}`);
+    throw new Error(
+      `Phantom connection failed: ${err.message || "Unknown error"}`
+    );
   }
 };
 
@@ -113,11 +122,14 @@ const connectSolflare = async (): Promise<WalletInfo> => {
       username: null,
       explorer: "https://explorer.solana.com",
     };
-  } catch (error: any) {
-    if (error.code === 4001) {
+  } catch (error) {
+    const err = error as { code?: number; message?: string };
+    if (err.code === 4001) {
       throw new Error("User rejected the connection request");
     }
-    throw new Error(`Solflare connection failed: ${error.message}`);
+    throw new Error(
+      `Solflare connection failed: ${err.message || "Unknown error"}`
+    );
   }
 };
 
@@ -172,8 +184,9 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (storageError) {
         console.warn("Failed to save wallet to localStorage:", storageError);
       }
-    } catch (err: any) {
-      console.error("❌ Wallet connection error:", err);
+    } catch (error) {
+      console.error("❌ Wallet connection error:", error);
+      const err = error as { message?: string };
       const errorMessage = err.message || "Failed to connect wallet";
       setError(errorMessage);
       throw new Error(errorMessage);
@@ -182,7 +195,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const disconnect = async () => {
+  const disconnect = useCallback(async () => {
     try {
       if (wallet?.walletType === "Phantom" && window.solana?.disconnect) {
         await window.solana.disconnect();
@@ -201,11 +214,12 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         );
       }
       console.log("✅ Wallet disconnected successfully");
-    } catch (err: any) {
-      console.error("Disconnect error:", err);
-      setError(`Failed to disconnect: ${err.message}`);
+    } catch (error) {
+      console.error("Disconnect error:", error);
+      const err = error as { message?: string };
+      setError(`Failed to disconnect: ${err.message || "Unknown error"}`);
     }
-  };
+  }, [wallet?.walletType]);
 
   const checkExistingConnection = async () => {
     try {
@@ -228,8 +242,8 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         // Remove stale connection data
         localStorage.removeItem("connectedWallet");
       }
-    } catch (err) {
-      console.log("No existing wallet connection found:", err);
+    } catch (error) {
+      console.log("No existing wallet connection found:", error);
       try {
         localStorage.removeItem("connectedWallet");
       } catch (storageError) {
@@ -272,7 +286,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         };
       }
     }
-  }, [wallet]);
+  }, [wallet, disconnect]);
 
   return (
     <WalletContext.Provider
