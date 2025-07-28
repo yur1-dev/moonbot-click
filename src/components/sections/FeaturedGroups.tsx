@@ -1,4 +1,3 @@
-// src/components/sections/FeaturedGroups.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -7,42 +6,45 @@ const groups = [
     name: "Tether",
     country: "USA",
     launched: 5,
-    avatar: "/avatars/tether.png",
+    avatar: "/placeholder.svg?height=32&width=32",
   },
   {
     name: "Forces88",
     country: "USA",
     launched: 5,
-    avatar: "/avatars/forces88.png",
+    avatar: "/placeholder.svg?height=32&width=32",
   },
   {
     name: "RockingGo",
     country: "USA",
     launched: 5,
-    avatar: "/avatars/rockinggo.png",
+    avatar: "/placeholder.svg?height=32&width=32",
   },
   {
     name: "RambledMonkey",
     country: "USA",
     launched: 5,
-    avatar: "/avatars/rambled.png",
+    avatar: "/placeholder.svg?height=32&width=32",
   },
 ];
 
 export default function FeaturedGroups() {
   return (
-    <Card className="bg-[#151A2C] text-white">
+    <Card className="bg-[#151A2C] text-white border-gray-700">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Featured Groups</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {groups.map((g) => (
-            <Card key={g.name} className="bg-[#1A2137] text-white">
+            <Card
+              key={g.name}
+              className="bg-[#1A2137] text-white border-gray-700"
+            >
               <CardHeader className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <img
-                    src={g.avatar}
+                    src={g.avatar || "/placeholder.svg"}
                     alt={g.name}
                     className="h-8 w-8 rounded-full"
                   />
@@ -55,8 +57,7 @@ export default function FeaturedGroups() {
                 </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="border-gray-600 text-gray-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0 cursor-pointer"
                 >
                   Track
                 </Button>

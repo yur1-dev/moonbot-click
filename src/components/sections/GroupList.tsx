@@ -1,4 +1,3 @@
-// src/components/sections/GroupTable.tsx
 import {
   Table,
   TableBody,
@@ -35,7 +34,7 @@ const dummy = Array.from({ length: 5 }).map((_, idx) => ({
 
 export default function GroupList() {
   return (
-    <Card className="bg-[#151A2C] text-white">
+    <Card className="bg-[#151A2C] text-white border-gray-700">
       <CardHeader>
         <CardTitle className="text-xl">Group Rankings</CardTitle>
       </CardHeader>
@@ -46,7 +45,7 @@ export default function GroupList() {
               <SelectTrigger className="w-[120px] bg-[#1A2137] text-white border-gray-600">
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A2137] text-white">
+              <SelectContent className="bg-[#1A2137] text-white border-gray-600">
                 <SelectItem value="rank">Rank</SelectItem>
                 <SelectItem value="pump">Avg. Pump</SelectItem>
               </SelectContent>
@@ -55,7 +54,7 @@ export default function GroupList() {
               <SelectTrigger className="w-[120px] bg-[#1A2137] text-white border-gray-600">
                 <SelectValue placeholder="Filter" />
               </SelectTrigger>
-              <SelectContent className="bg-[#1A2137] text-white">
+              <SelectContent className="bg-[#1A2137] text-white border-gray-600">
                 <SelectItem value="usa">USA</SelectItem>
                 <SelectItem value="jap">JAP</SelectItem>
               </SelectContent>
@@ -65,35 +64,41 @@ export default function GroupList() {
             <SelectTrigger className="w-[100px] bg-[#1A2137] text-white border-gray-600">
               <SelectValue placeholder="Show 10" />
             </SelectTrigger>
-            <SelectContent className="bg-[#1A2137] text-white">
+            <SelectContent className="bg-[#1A2137] text-white border-gray-600">
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="25">25</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>#</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Members</TableHead>
-              <TableHead>Coins Launched</TableHead>
-              <TableHead>Avg. Pump</TableHead>
-              <TableHead>Best Coin</TableHead>
-              <TableHead>Worst Coin</TableHead>
-              <TableHead>Trend</TableHead>
-              <TableHead></TableHead>
+            <TableRow className="border-gray-700">
+              <TableHead className="text-gray-300">#</TableHead>
+              <TableHead className="text-gray-300">Name</TableHead>
+              <TableHead className="text-gray-300">Members</TableHead>
+              <TableHead className="text-gray-300">Coins Launched</TableHead>
+              <TableHead className="text-gray-300">Avg. Pump</TableHead>
+              <TableHead className="text-gray-300">Best Coin</TableHead>
+              <TableHead className="text-gray-300">Worst Coin</TableHead>
+              <TableHead className="text-gray-300">Trend</TableHead>
+              <TableHead className="text-gray-300"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {dummy.map((row) => (
-              <TableRow key={row.rank}>
-                <TableCell>{row.rank}</TableCell>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.members}</TableCell>
-                <TableCell>{row.launched}</TableCell>
-                <TableCell className="text-blue-400">{row.avgPump}</TableCell>
+              <TableRow
+                key={row.rank}
+                className="border-gray-700 hover:bg-[#1A2137]"
+              >
+                <TableCell className="text-white">{row.rank}</TableCell>
+                <TableCell className="text-white font-medium">
+                  {row.name}
+                </TableCell>
+                <TableCell className="text-gray-300">{row.members}</TableCell>
+                <TableCell className="text-gray-300">{row.launched}</TableCell>
+                <TableCell className="text-blue-400 font-medium">
+                  {row.avgPump}
+                </TableCell>
                 <TableCell className="text-green-400">{row.best}</TableCell>
                 <TableCell className="text-red-400">{row.worst}</TableCell>
                 <TableCell>
@@ -102,8 +107,7 @@ export default function GroupList() {
                 <TableCell>
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="border-gray-600 text-gray-200"
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-0 cursor-pointer"
                   >
                     Track
                   </Button>

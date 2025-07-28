@@ -4,8 +4,8 @@
 import { Hero } from "@/components/sections/Hero";
 import Metrics from "@/components/sections/Metrics";
 import FeaturedGroups from "@/components/sections/FeaturedGroups";
-import NewlyAdded from "@/components/sections/NewlyAdded";
 import GroupTable from "@/components/sections/GroupList";
+import NewlyAddedSolana from "@/components/sections/NewlyAddedSolana";
 
 export default function HomePage() {
   return (
@@ -43,7 +43,7 @@ export default function HomePage() {
       </div>
 
       {/* Content */}
-      <div className="relative grid grid-cols-1 gap-6 md:grid-cols-3 z-30">
+      <div className="text-white relative grid grid-cols-1 gap-6 md:grid-cols-3 z-30">
         <section className="md:col-span-2">
           <Hero />
         </section>
@@ -55,7 +55,7 @@ export default function HomePage() {
         </section>
 
         <section>
-          <NewlyAdded />
+          <NewlyAddedSolana />
         </section>
 
         <section className="md:col-span-3">

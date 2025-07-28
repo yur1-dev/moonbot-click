@@ -1,45 +1,50 @@
-// src/types/wallet.ts
-// Ensure this file is treated as a module
-export {};
+export interface SolanaProvider {
+  isPhantom?: boolean;
+  connect: (options?: {
+    onlyIfTrusted?: boolean;
+  }) => Promise<{ publicKey: { toString(): string } }>;
+  disconnect: () => Promise<void>;
+  on: (event: string, callback: (args: any) => void) => void;
+  off?: (event: string, callback: (args: any) => void) => void;
+  publicKey?: { toString(): string };
+  isConnected?: boolean;
+}
+
+export interface SolflareProvider {
+  isSolflare?: boolean;
+  connect: (options?: {
+    onlyIfTrusted?: boolean;
+  }) => Promise<{ publicKey: { toString(): string } }>;
+  disconnect: () => Promise<void>;
+  on?: (event: string, callback: (args: any) => void) => void;
+  off?: (event: string, callback: (args: any) => void) => void;
+  publicKey?: { toString(): string };
+  isConnected?: boolean;
+}
 
 declare global {
   interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      /**
-       * Send a JSON-RPC request to the provider.
-       */
-      request: (args: {
-        method: string;
-        params?: unknown[];
-      }) => Promise<unknown>;
-      /**
-       * Listen for provider events.
-       */
-      on: (event: string, callback: (args: unknown) => void) => void;
-      /**
-       * Remove an event listener.
-       */
-      removeListener: (
-        event: string,
-        callback: (args: unknown) => void
-      ) => void;
-    };
-    solana?: {
-      isPhantom?: boolean;
-      connect: (options?: {
-        onlyIfTrusted?: boolean;
-      }) => Promise<{ publicKey: { toString(): string } }>;
-      disconnect: () => Promise<void>;
-      on: (event: string, callback: (args: unknown) => void) => void;
-      off?: (event: string, callback: (args: unknown) => void) => void;
-    };
-    solflare?: {
-      isConnected: boolean;
-      publicKey: { toString(): string };
-      connect: () => Promise<void>;
-      disconnect: () => Promise<void>;
-      on?: (event: string, callback: (args: unknown) => void) => void;
-    };
+    solana?: SolanaProvider;
+    solflare?: SolflareProvider;
   }
+}
+
+export type WalletType = "Phantom" | "Solflare" | "Ledger";
+export type NetworkType = "solana";
+
+export interface WalletInfo {
+  address: string;
+  balance: string;
+  network: NetworkType;
+  walletType: WalletType;
+  networkName?: string;
+  symbol?: string;
+  username?: string | null;
+  explorer?: string;
+}
+
+export interface WalletError {
+  code?: number;
+  message: string;
+  data?: any;
 }
