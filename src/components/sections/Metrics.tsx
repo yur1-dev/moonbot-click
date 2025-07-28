@@ -5,8 +5,18 @@ import { Loader2, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import FearGreedIndexLive from "./FearGreedIndexLive";
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name?: string;
+    value: number;
+    dataKey: string;
+  }>;
+  label?: string;
+}
+
 // Custom tooltip component
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
