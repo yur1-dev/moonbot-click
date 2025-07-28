@@ -1,103 +1,67 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
+import { Hero } from "@/components/sections/Hero";
+import Metrics from "@/components/sections/Metrics";
+import FeaturedGroups from "@/components/sections/FeaturedGroups";
+import NewlyAdded from "@/components/sections/NewlyAdded";
+import GroupTable from "@/components/sections/GroupList";
+
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="relative min-h-screen px-18 py-6 bg-[#0A0E19] overflow-hidden">
+      {/* Stars */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="stars"></div>
+        <div className="stars2"></div>
+        <div className="stars3"></div>
+        <div className="stars4"></div>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Planets Layer */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex justify-end items-start pr-10 pt-24">
+        {/* Earth + Moon container */}
+        <div className="relative">
+          {/* Earth */}
+          <div className="w-56 h-56 rounded-full bg-gradient-to-b from-blue-600 via-blue-500 to-green-600 shadow-[0_0_150px_rgba(0,150,255,0.7)] animate-spin-slower z-20 overflow-hidden">
+            {/* Fake continents */}
+            <div className="absolute top-8 left-10 w-20 h-16 bg-green-700/70 rounded-full rotate-12"></div>
+            <div className="absolute bottom-12 right-8 w-16 h-12 bg-green-600/60 rounded-full -rotate-12"></div>
+            {/* Atmosphere glow */}
+            <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-2xl"></div>
+          </div>
+
+          {/* Moon - slightly above and left */}
+          <div className="absolute -top-1/12 -left-32 w-28 h-28 rounded-full bg-gradient-to-b from-gray-300 to-gray-500 shadow-[0_0_60px_rgba(200,200,255,0.5)] opacity-90 animate-spin-slow"></div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      {/* Extra planets */}
+      <div className="absolute top-1/7 left-1/4 w-16 h-16 bg-cyan-400 rounded-full shadow-[0_0_40px_rgba(0,255,255,0.3)] animate-orbit"></div>
+      <div className="absolute bottom-1/3 right-60 w-24 h-24 bg-purple-500 rounded-full shadow-[0_0_60px_rgba(200,150,255,0.4)] ring-planet">
+        <div className="absolute inset-0 w-[160%] h-[160%] border-2 border-purple-300/40 rounded-full -translate-x-[15%] -translate-y-[15%] rotate-45"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative grid grid-cols-1 gap-6 md:grid-cols-3 z-30">
+        <section className="md:col-span-2">
+          <Hero />
+        </section>
+        <section className="hidden md:block">{/* Future widget */}</section>
+
+        <section className="md:col-span-2 space-y-6">
+          <Metrics />
+          <FeaturedGroups />
+        </section>
+
+        <section>
+          <NewlyAdded />
+        </section>
+
+        <section className="md:col-span-3">
+          <GroupTable />
+        </section>
+      </div>
+    </main>
   );
 }
