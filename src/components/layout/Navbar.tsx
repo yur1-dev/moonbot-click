@@ -76,8 +76,8 @@ export function Navbar() {
           </Button>
         </div>
 
-        {/* Connect Button (desktop) */}
-        <div className="hidden md:block cursor-pointer">
+        {/* Enhanced Wallet Button (desktop) */}
+        <div className="hidden md:block">
           <WalletModal />
         </div>
       </div>
@@ -114,8 +114,8 @@ export function Navbar() {
               />
             </div>
 
-            {/* Connect Button (mobile) */}
-            <div className="mt-4 cursor-pointer">
+            {/* Enhanced Wallet Button (mobile) */}
+            <div className="mt-4">
               <WalletModal />
             </div>
           </nav>

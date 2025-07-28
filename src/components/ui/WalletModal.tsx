@@ -1,8 +1,6 @@
 "use client";
-
 import type React from "react";
-
-import { type FC, useState } from "react";
+import { type FC, useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -54,14 +52,20 @@ const WALLETS = [
 interface NotificationProps {
   message: string;
   type: "success" | "error" | "warning";
+  isVisible: boolean;
   onClose: () => void;
 }
 
-const Notification: FC<NotificationProps> = ({ message, type, onClose }) => {
+const Notification: FC<NotificationProps> = ({
+  message,
+  type,
+  isVisible,
+  onClose,
+}) => {
   const styles = {
-    success: "bg-green-600 text-white border-green-500",
-    error: "bg-red-600 text-white border-red-500",
-    warning: "bg-yellow-600 text-white border-yellow-500",
+    success: "bg-green-600 text-white border-green-500 shadow-green-500/20",
+    error: "bg-red-600 text-white border-red-500 shadow-red-500/20",
+    warning: "bg-yellow-600 text-white border-yellow-500 shadow-yellow-500/20",
   };
 
   const icons = {
@@ -72,13 +76,26 @@ const Notification: FC<NotificationProps> = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 flex items-center space-x-2 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${styles[type]} border`}
+      className={`fixed top-4 left-1/2 z-50 flex items-center space-x-3 px-6 py-4 rounded-xl shadow-2xl border backdrop-blur-sm ${
+        styles[type]
+      } transition-all duration-500 ease-in-out ${
+        isVisible
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95 pointer-events-none"
+      }`}
+      style={{
+        minWidth: "320px",
+        maxWidth: "90vw",
+        transform: `translateX(-50%) ${
+          isVisible ? "translateY(0)" : "translateY(-8px)"
+        }`,
+      }}
     >
-      {icons[type]}
-      <span className="text-sm font-medium max-w-xs">{message}</span>
+      <div className="flex-shrink-0">{icons[type]}</div>
+      <span className="text-sm font-medium flex-1 text-center">{message}</span>
       <button
         onClick={onClose}
-        className="ml-2 text-white hover:text-gray-200 text-lg font-bold"
+        className="flex-shrink-0 ml-2 text-white hover:text-gray-200 transition-colors duration-200 text-lg font-bold w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10"
       >
         ×
       </button>
@@ -98,7 +115,6 @@ const SimpleBadge: FC<{
     default: "bg-blue-600 text-white",
     secondary: "bg-gray-600 text-gray-100",
   };
-
   return (
     <span className={`${baseClasses} ${variantClasses[variant]} ${className}`}>
       {children}
@@ -115,6 +131,7 @@ export const WalletModal: FC = () => {
   const [notification, setNotification] = useState<{
     message: string;
     type: "success" | "error" | "warning";
+    isVisible: boolean;
   } | null>(null);
 
   const popularWallets = WALLETS.filter((w) => w.popular);
@@ -125,9 +142,34 @@ export const WalletModal: FC = () => {
     message: string,
     type: "success" | "error" | "warning"
   ) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 6000);
+    // Clear any existing notification first
+    setNotification(null);
+
+    // Small delay to ensure clean state
+    setTimeout(() => {
+      setNotification({ message, type, isVisible: true });
+    }, 50);
   };
+
+  const hideNotification = () => {
+    if (notification) {
+      setNotification((prev) => (prev ? { ...prev, isVisible: false } : null));
+      // Remove from DOM after fade animation completes
+      setTimeout(() => {
+        setNotification(null);
+      }, 500);
+    }
+  };
+
+  // Auto-hide notification after 4 seconds
+  useEffect(() => {
+    if (notification?.isVisible) {
+      const timer = setTimeout(() => {
+        hideNotification();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification?.isVisible]);
 
   const handleConnect = async (walletName: WalletType) => {
     try {
@@ -176,12 +218,12 @@ export const WalletModal: FC = () => {
   const openExplorer = () => {
     if (!wallet) return;
     const baseUrl = wallet.explorer || "https://explorer.solana.com/address/";
-    window.open(`${baseUrl}/${wallet.address}`, "_blank");
+    window.open(`${baseUrl}${wallet.address}`, "_blank");
   };
 
   // Check if Phantom is available
   const isPhantomAvailable = () => {
-    return typeof window !== "undefined" && window.solana?.isPhantom;
+    return typeof window !== "undefined" && (window as any).solana?.isPhantom;
   };
 
   // If wallet is connected, show wallet info
@@ -192,7 +234,8 @@ export const WalletModal: FC = () => {
           <Notification
             message={notification.message}
             type={notification.type}
-            onClose={() => setNotification(null)}
+            isVisible={notification.isVisible}
+            onClose={hideNotification}
           />
         )}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -221,7 +264,6 @@ export const WalletModal: FC = () => {
                   Connected
                 </SimpleBadge>
               </div>
-
               {/* Wallet Info */}
               <div className="bg-[#151A2C]/50 backdrop-blur-sm rounded-xl p-4 space-y-4 border border-gray-700/50">
                 <div className="flex items-center justify-between">
@@ -233,7 +275,6 @@ export const WalletModal: FC = () => {
                     {wallet.walletType}
                   </span>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400 flex items-center">
                     <Globe className="mr-2 h-4 w-4" />
@@ -243,7 +284,6 @@ export const WalletModal: FC = () => {
                     {wallet.networkName || wallet.network}
                   </span>
                 </div>
-
                 {wallet.username && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400 flex items-center">
@@ -255,7 +295,6 @@ export const WalletModal: FC = () => {
                     </span>
                   </div>
                 )}
-
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Balance</span>
                   <div className="flex items-center space-x-2">
@@ -277,7 +316,6 @@ export const WalletModal: FC = () => {
                     </Button>
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Address</span>
                   <div className="flex items-center space-x-2">
@@ -295,7 +333,6 @@ export const WalletModal: FC = () => {
                   </div>
                 </div>
               </div>
-
               {/* Action Buttons */}
               <div className="flex space-x-3">
                 <Button
@@ -329,7 +366,8 @@ export const WalletModal: FC = () => {
         <Notification
           message={notification.message}
           type={notification.type}
-          onClose={() => setNotification(null)}
+          isVisible={notification.isVisible}
+          onClose={hideNotification}
         />
       )}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -348,7 +386,6 @@ export const WalletModal: FC = () => {
               Choose your preferred Solana wallet to get started
             </p>
           </DialogHeader>
-
           {!isPhantomAvailable() && (
             <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-3 text-yellow-400 text-sm flex items-start space-x-2">
               <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -368,7 +405,6 @@ export const WalletModal: FC = () => {
               </div>
             </div>
           )}
-
           {error && (
             <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 text-red-400 text-sm flex items-start space-x-2">
               <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -378,7 +414,6 @@ export const WalletModal: FC = () => {
               </div>
             </div>
           )}
-
           <div className="space-y-3">
             {visibleWallets.map((w) => (
               <Button
@@ -425,7 +460,6 @@ export const WalletModal: FC = () => {
                 </div>
               </Button>
             ))}
-
             {otherWallets.length > 0 && (
               <Button
                 variant="ghost"
@@ -447,7 +481,6 @@ export const WalletModal: FC = () => {
               </Button>
             )}
           </div>
-
           <div className="text-xs text-gray-500 text-center pt-2 border-t border-gray-700/50">
             By connecting a wallet, you agree to our{" "}
             <span className="text-blue-400 hover:text-blue-300 cursor-pointer">
