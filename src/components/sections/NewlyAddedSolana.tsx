@@ -52,9 +52,7 @@ function TokenLogo({
         alt={`${token.name} logo`}
         width={40}
         height={40}
-        className={`w-10 h-10 rounded-full object-cover shadow-md transition-all duration-200 ${
-          imageLoading ? "opacity-0" : "opacity-100"
-        }`}
+        className="w-10 h-10 rounded-full object-cover shadow-md transition-all duration-200"
         onError={handleImageError}
         onLoad={handleImageLoad}
       />
