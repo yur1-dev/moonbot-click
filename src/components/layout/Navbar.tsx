@@ -1,4 +1,3 @@
-// src/components/layout/Navbar.tsx
 "use client";
 
 import { useState } from "react";
@@ -7,7 +6,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Wallet, Menu, X, Search } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
+import { WalletModal } from "../ui/WalletModal";
 
 const NAV_ITEMS = [
   { label: "Home", href: "/" },
@@ -77,11 +77,8 @@ export function Navbar() {
         </div>
 
         {/* Connect Button (desktop) */}
-        <div className="hidden md:block">
-          <Button className="bg-[#1A65F6] hover:bg-[#1550C1] text-white transition-colors flex items-center cursor-pointer">
-            <Wallet className="mr-2 h-4 w-4" />
-            Connect
-          </Button>
+        <div className="hidden md:block cursor-pointer">
+          <WalletModal />
         </div>
       </div>
 
@@ -107,6 +104,7 @@ export function Navbar() {
                 </Link>
               );
             })}
+
             {/* Mobile Search Bar with Icon */}
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -115,10 +113,11 @@ export function Navbar() {
                 className="pl-10 bg-[#151A2C] text-gray-100 placeholder-gray-400 w-full border-gray-600 focus:border-[#1A65F6] focus:ring-1 focus:ring-[#1A65F6]"
               />
             </div>
-            <Button className="bg-[#1A65F6] hover:bg-[#1550C1] text-white transition-colors flex items-center justify-center mt-4 cursor-pointer">
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect
-            </Button>
+
+            {/* Connect Button (mobile) */}
+            <div className="mt-4 cursor-pointer">
+              <WalletModal />
+            </div>
           </nav>
         </div>
       )}
