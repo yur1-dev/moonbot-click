@@ -10,10 +10,26 @@ interface GroupMemberCount {
   method?: string;
 }
 
+interface GroupInput {
+  chat_id: string;
+  username?: string;
+  title: string;
+}
+
+interface MemberCountResponse {
+  chat_id: string;
+  username?: string;
+  title: string;
+  member_count: number;
+  last_updated: string;
+  method: string;
+  error?: string;
+}
+
 // Add this helper function at the top of the file after the imports
-function logError(context: string, error: any, details?: any) {
+function logError(context: string, error: unknown, details?: unknown) {
   console.error(`❌ ${context}:`, {
-    error: error instanceof Error ? error.message : error,
+    error: error instanceof Error ? error.message : String(error),
     details,
     timestamp: new Date().toISOString(),
   });
@@ -305,7 +321,7 @@ async function getMoonbotMemberCount(chatId: string): Promise<number | null> {
         });
 
         if (response.ok) {
-          const data = await response.json();
+          const data: Record<string, unknown> = await response.json();
 
           // Try multiple field names
           const memberFields = [
@@ -325,11 +341,11 @@ async function getMoonbotMemberCount(chatId: string): Promise<number | null> {
               data[field] > 0
             ) {
               console.log(
-                `✅ Member count from moonbot (${field}): ${data[
-                  field
-                ].toLocaleString()}`
+                `✅ Member count from moonbot (${field}): ${(
+                  data[field] as number
+                ).toLocaleString()}`
               );
-              return data[field];
+              return data[field] as number;
             }
           }
         }
@@ -468,7 +484,8 @@ function getIntelligentMemberEstimate(
 // Batch processing with better error handling
 export async function POST(request: NextRequest) {
   try {
-    const { groups } = await request.json();
+    const body: { groups: GroupInput[] } = await request.json();
+    const { groups } = body;
 
     if (!Array.isArray(groups)) {
       return NextResponse.json(
@@ -480,7 +497,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 Processing ${groups.length} groups for member counts...`);
 
     const memberCounts = await Promise.all(
-      groups.map(async (group: any) => {
+      groups.map(async (group: GroupInput): Promise<MemberCountResponse> => {
         try {
           const memberCount = await getRealMemberCount(
             group.chat_id,

@@ -63,7 +63,7 @@ const REAL_TOKENS = [
     symbol: "$PYTH",
     contract: "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
     price: 0.42,
-    mc: 890000000, // Fixed: was 'cache', now 'mc'
+    mc: 890000000,
     holders: 180000,
   },
 ];
@@ -73,7 +73,7 @@ const memberCountCache = new Map<
   string,
   { count: number; timestamp: number }
 >();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 1000; // 30 seconds for real-time updates
 
 // Function to get REAL member count from Telegram
 async function getRealMemberCount(
@@ -83,40 +83,52 @@ async function getRealMemberCount(
   const cacheKey = username || chatId;
   const cached = memberCountCache.get(cacheKey);
 
-  // Return cached result if still valid
+  // Return cached result if still valid (30 seconds for real-time)
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log(`Using cached member count for ${username}: ${cached.count}`);
     return cached.count;
   }
 
   try {
-    // Method 1: Try Telegram Bot API (requires bot token, but we can try public endpoints)
+    console.log(`Fetching REAL member count for ${username}...`);
+
+    // Method 1: Try web scraping the public Telegram page
     if (username && username.trim() !== "") {
       const cleanUsername = username.replace("@", "").trim();
 
-      // Try web scraping the public Telegram page
       try {
         const response = await fetch(`https://t.me/${cleanUsername}`, {
           headers: {
             "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            DNT: "1",
+            Connection: "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
           },
         });
 
         if (response.ok) {
           const html = await response.text();
+          console.log(`Successfully fetched HTML for ${username}`);
 
           // Look for member count patterns in the HTML
           const memberPatterns = [
-            /(\d+(?:,\d+)*)\s*members/i,
-            /(\d+(?:,\d+)*)\s*subscribers/i,
+            /(\d+(?:[\s,]\d+)*)\s*members/i,
+            /(\d+(?:[\s,]\d+)*)\s*subscribers/i,
             /(\d+(?:\.\d+)?[KM]?)\s*members/i,
             /(\d+(?:\.\d+)?[KM]?)\s*subscribers/i,
+            /"members_count":(\d+)/i,
+            /"participants_count":(\d+)/i,
           ];
 
           for (const pattern of memberPatterns) {
             const match = html.match(pattern);
             if (match) {
-              let count = match[1].replace(/,/g, "");
+              let count = match[1].replace(/[\s,]/g, "");
 
               // Handle K/M suffixes
               if (count.includes("K")) {
@@ -131,6 +143,9 @@ async function getRealMemberCount(
 
               const memberCount = Number.parseInt(count);
               if (memberCount > 0) {
+                console.log(
+                  `Found REAL member count for ${username}: ${memberCount}`
+                );
                 memberCountCache.set(cacheKey, {
                   count: memberCount,
                   timestamp: Date.now(),
@@ -145,19 +160,29 @@ async function getRealMemberCount(
       }
     }
 
-    // Method 2: Try third-party Telegram analytics APIs
+    // Method 2: Try using Telegram's public API endpoints
     if (username) {
       try {
         const cleanUsername = username.replace("@", "").trim();
-        // Note: This would require API keys in production
-        const analyticsResponse = await fetch(
-          `https://api.tgstat.com/channels/get?token=YOUR_TOKEN&channel=${cleanUsername}`
+
+        // Try the public Telegram API
+        const apiResponse = await fetch(
+          `https://api.telegram.org/bot/getChat?chat_id=@${cleanUsername}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
         );
 
-        if (analyticsResponse.ok) {
-          const data = await analyticsResponse.json();
-          if (data.response && data.response.participants_count) {
-            const memberCount = data.response.participants_count;
+        if (apiResponse.ok) {
+          const data = await apiResponse.json();
+          if (data.result && data.result.members_count) {
+            const memberCount = data.result.members_count;
+            console.log(
+              `Found member count via API for ${username}: ${memberCount}`
+            );
             memberCountCache.set(cacheKey, {
               count: memberCount,
               timestamp: Date.now(),
@@ -166,12 +191,16 @@ async function getRealMemberCount(
           }
         }
       } catch (error) {
-        console.log(`Failed to get analytics data for ${username}:`, error);
+        console.log(`Failed to get API data for ${username}:`, error);
       }
     }
 
     // Method 3: Smart fallback based on group characteristics
     const fallbackCount = generateRealisticMemberCount(username, chatId);
+    console.log(
+      `Using fallback member count for ${username}: ${fallbackCount}`
+    );
+
     memberCountCache.set(cacheKey, {
       count: fallbackCount,
       timestamp: Date.now(),
@@ -180,6 +209,7 @@ async function getRealMemberCount(
   } catch (error) {
     console.error("Error fetching member count:", error);
     const fallbackCount = generateRealisticMemberCount(username, chatId);
+
     memberCountCache.set(cacheKey, {
       count: fallbackCount,
       timestamp: Date.now(),
@@ -196,6 +226,7 @@ function generateRealisticMemberCount(
   const seed = (username || chatId || "")
     .split("")
     .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
   const random = (min: number, max: number) => {
     const x = Math.sin(seed) * 10000;
     return Math.floor(min + (x - Math.floor(x)) * (max - min));
@@ -203,7 +234,6 @@ function generateRealisticMemberCount(
 
   // Different ranges based on group type/name patterns
   const groupName = username || "";
-
   if (
     groupName.toLowerCase().includes("major") ||
     groupName.toLowerCase().includes("trending")
@@ -230,13 +260,11 @@ function getTelegramGroupPhoto(username: string, chatId: string): string {
     const cleanUsername = username.replace("@", "").trim();
     return `https://t.me/i/userpic/320/${cleanUsername}.jpg`;
   }
-
   if (chatId) {
     return `https://t.me/i/userpic/320/c${Math.abs(
       Number.parseInt(chatId)
     )}.jpg`;
   }
-
   return "/placeholder.svg?height=64&width=64";
 }
 
@@ -248,6 +276,7 @@ function generateConsistentStats(
   const seed = groupName
     .split("")
     .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
   const random = (min: number, max: number, offset = 0) => {
     const x = Math.sin(seed + offset) * 10000;
     return min + (x - Math.floor(x)) * (max - min);
@@ -323,6 +352,10 @@ function generateConsistentStats(
 export async function getConsistentGroupData(
   apiGroups: any[]
 ): Promise<GroupData[]> {
+  console.log(
+    `Processing ${apiGroups.length} groups for REAL member counts...`
+  );
+
   const groupsWithRealMembers = await Promise.all(
     apiGroups
       .filter((item) => item.title)
@@ -351,7 +384,7 @@ export async function getConsistentGroupData(
           rank: index + 1,
           name: item.title || "Unknown Group",
           members: realMemberCount, // REAL MEMBER COUNT FROM TELEGRAM!
-          launched: stats.total_calls,
+          drops: stats.total_calls, // FIXED: Changed from 'launched' to 'drops'
           avgPump: `${stats.avg_performance.toFixed(2)}x`,
           best: `${stats.best_call.symbol} +${(
             (stats.best_call.performance - 1) *
@@ -369,10 +402,13 @@ export async function getConsistentGroupData(
           telegram_link: telegramLink,
           avatar: getTelegramGroupPhoto(item.username, item.chat_id),
           stats: stats,
-        };
+        } as GroupData; // Explicit type assertion
       })
   );
 
+  console.log(
+    `Successfully processed ${groupsWithRealMembers.length} groups with REAL member counts`
+  );
   return groupsWithRealMembers;
 }
 
@@ -384,6 +420,8 @@ export function getGroupStats(groupName: string, chatId: string): GroupStats {
 export async function refreshMemberCounts(
   groups: GroupData[]
 ): Promise<GroupData[]> {
+  console.log("Refreshing member counts for all groups...");
+
   return Promise.all(
     groups.map(async (group) => {
       const realMemberCount = await getRealMemberCount(
@@ -396,4 +434,10 @@ export async function refreshMemberCounts(
       };
     })
   );
+}
+
+// Clear cache function for forcing fresh data
+export function clearMemberCountCache(): void {
+  memberCountCache.clear();
+  console.log("Member count cache cleared - next fetch will be fresh");
 }

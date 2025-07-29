@@ -16,6 +16,10 @@ import {
   User,
   RefreshCw,
 } from "lucide-react";
+import {
+  fetchRealTokenData,
+  type RealTokenData,
+} from "@/lib/real-data-service";
 
 // TradingView Widget Component with proper theming
 function TradingViewWidget({ symbol }: { symbol: string }) {
@@ -25,7 +29,6 @@ function TradingViewWidget({ symbol }: { symbol: string }) {
       if (container) {
         container.innerHTML = "";
       }
-
       const script = document.createElement("script");
       script.src =
         "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
@@ -47,11 +50,9 @@ function TradingViewWidget({ symbol }: { symbol: string }) {
         save_image: false,
         container_id: "tradingview_chart",
       });
-
       if (container) {
         container.appendChild(script);
       }
-
       return () => {
         if (container) {
           container.innerHTML = "";
@@ -83,22 +84,6 @@ interface TokenCall {
   status: "active" | "mooned" | "rugged";
 }
 
-interface RealTokenData {
-  contract: string;
-  symbol: string;
-  name: string;
-  price_usd: number;
-  price_change_24h: number;
-  market_cap: number;
-  volume_24h: number;
-  liquidity: number;
-  holders_estimate: number;
-  fdv: number;
-  buys_24h: number;
-  sells_24h: number;
-  created_at: string;
-}
-
 export default function ChartPage() {
   const params = useParams<{ contract: string }>();
   const router = useRouter();
@@ -109,60 +94,6 @@ export default function ChartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Fetch real token data from DexScreener API
-  const fetchRealTokenData = async (contractAddress: string) => {
-    try {
-      console.log(`🔥 Fetching REAL data for contract: ${contractAddress}`);
-
-      const response = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`,
-        {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (compatible; TokenBot/1.0)",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`DexScreener API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.pairs || data.pairs.length === 0) {
-        throw new Error("No trading pairs found for this token");
-      }
-
-      const pair = data.pairs.sort(
-        (a: any, b: any) =>
-          Number.parseFloat(b.liquidity?.usd || "0") -
-          Number.parseFloat(a.liquidity?.usd || "0")
-      )[0];
-
-      const realData: RealTokenData = {
-        contract: contractAddress,
-        symbol: pair.baseToken?.symbol || "UNKNOWN",
-        name: pair.baseToken?.name || "Unknown Token",
-        price_usd: Number.parseFloat(pair.priceUsd || "0"),
-        price_change_24h: Number.parseFloat(pair.priceChange?.h24 || "0"),
-        market_cap: Number.parseFloat(pair.marketCap || "0"),
-        volume_24h: Number.parseFloat(pair.volume?.h24 || "0"),
-        liquidity: Number.parseFloat(pair.liquidity?.usd || "0"),
-        holders_estimate: Math.floor(Math.random() * 50000) + 1000,
-        fdv: Number.parseFloat(pair.fdv || "0"),
-        buys_24h: Number.parseInt(pair.txns?.h24?.buys || "0"),
-        sells_24h: Number.parseInt(pair.txns?.h24?.sells || "0"),
-        created_at: pair.pairCreatedAt || new Date().toISOString(),
-      };
-
-      console.log("✅ Real token data fetched:", realData);
-      return realData;
-    } catch (error) {
-      console.error("❌ Error fetching real token data:", error);
-      throw error;
-    }
-  };
 
   // Generate realistic Telegram calls for this token
   const generateTokenCalls = (tokenData: RealTokenData): TokenCall[] => {
@@ -184,27 +115,23 @@ export default function ChartPage() {
     ];
 
     const callMessages = [
-      `🚀 NEW GEM ALERT: ${tokenData.symbol}\nContract: ${
+      `NEW GEM ALERT: ${tokenData.symbol}\nContract: ${
         tokenData.contract
       }\nEntry: $${tokenData.price_usd.toFixed(
         8
-      )}\nTarget: 10x minimum\nThis is going to MOON! 🌙`,
-      `💎 ALPHA CALL: ${tokenData.symbol}\n${
-        tokenData.contract
-      }\nCurrent MC: $${(tokenData.market_cap / 1000000).toFixed(
-        1
-      )}M\nThis is the next 100x gem! Don't fade this!`,
-      `🔥 HOT CALL: ${tokenData.name} (${tokenData.symbol})\nContract: ${
+      )}\nTarget: 10x minimum\nThis is going to MOON!`,
+      `ALPHA CALL: ${tokenData.symbol}\n${tokenData.contract}\nCurrent MC: $${(
+        tokenData.market_cap / 1000000
+      ).toFixed(1)}M\nThis is the next 100x gem! Don't fade this!`,
+      `HOT CALL: ${tokenData.name} (${tokenData.symbol})\nContract: ${
         tokenData.contract
       }\nLiquidity: $${(tokenData.liquidity / 1000).toFixed(
         0
       )}K\nVolume pumping! Get in NOW!`,
-      `⚡ URGENT: ${tokenData.symbol} breaking out!\n${
+      `URGENT: ${tokenData.symbol} breaking out!\n${
         tokenData.contract
-      }\nPrice: $${tokenData.price_usd.toFixed(
-        8
-      )}\nThis is going parabolic! 🚀🚀🚀`,
-      `🎯 SNIPER CALL: ${tokenData.name}\nContract: ${
+      }\nPrice: $${tokenData.price_usd.toFixed(8)}\nThis is going parabolic!`,
+      `SNIPER CALL: ${tokenData.name}\nContract: ${
         tokenData.contract
       }\nEntry zone: $${tokenData.price_usd.toFixed(
         8
@@ -244,21 +171,21 @@ export default function ChartPage() {
       if (!contractParam) {
         throw new Error("No contract address provided");
       }
-
       const contractAddress = decodeURIComponent(contractParam);
       setContract(contractAddress);
-
-      console.log("🔍 Loading REAL token data for:", contractAddress);
+      console.log("Loading REAL token data for:", contractAddress);
 
       const realTokenData = await fetchRealTokenData(contractAddress);
-      setTokenData(realTokenData);
+      if (!realTokenData) {
+        throw new Error("Token not found or no trading pairs available");
+      }
 
+      setTokenData(realTokenData);
       const calls = generateTokenCalls(realTokenData);
       setTokenCalls(calls);
-
-      console.log("✅ Token data loaded successfully!");
+      console.log("Token data loaded successfully!");
     } catch (err) {
-      console.error("❌ Error loading token data:", err);
+      console.error("Error loading token data:", err);
       setError(
         err instanceof Error ? err.message : "Failed to load token data"
       );
@@ -332,7 +259,6 @@ export default function ChartPage() {
       const diffInHours = Math.floor(
         (now.getTime() - callTime.getTime()) / (1000 * 60 * 60)
       );
-
       if (diffInHours < 1) return "Just now";
       if (diffInHours === 1) return "1 hour ago";
       return `${diffInHours} hours ago`;
@@ -348,7 +274,7 @@ export default function ChartPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-20">
             <div className="text-gray-300 animate-fade-in">
-              🔥 Loading REAL token data from DexScreener...
+              Loading REAL token data from DexScreener...
             </div>
           </div>
         </div>
@@ -368,10 +294,10 @@ export default function ChartPage() {
               <Button
                 onClick={refreshData}
                 disabled={refreshing}
-                className="bg-blue-600 hover:bg-blue-600/80 text-white rounded-lg px-6 py-2 transition-all duration-200"
+                className="bg-blue-600 hover:bg-blue-600/80 text-white h-8 px-4 text-sm transition-all duration-200"
               >
                 <RefreshCw
-                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                  className={`h-3 w-3 mr-2 ${refreshing ? "animate-spin" : ""}`}
                 />
                 Try Again
               </Button>
@@ -394,25 +320,24 @@ export default function ChartPage() {
                 <Button
                   variant="ghost"
                   onClick={() => router.back()}
-                  className="text-gray-400 hover:text-white hover:bg-[#1A2137] rounded-lg p-2 transition-all duration-200"
+                  className="text-gray-400 hover:text-white hover:bg-[#1A2137] h-8 px-2 transition-all duration-200"
                 >
-                  <ArrowLeft className="h-5 w-5 mr-2" />
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Back</span>
                 </Button>
                 <Button
                   onClick={refreshData}
                   disabled={refreshing}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 transition-all duration-200"
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 text-xs transition-all duration-200"
                 >
                   <RefreshCw
-                    className={`h-4 w-4 mr-2 ${
+                    className={`h-3 w-3 mr-2 ${
                       refreshing ? "animate-spin" : ""
                     }`}
                   />
                   <span className="hidden sm:inline">Refresh</span>
                 </Button>
               </div>
-
               {/* Token Info */}
               <div className="space-y-3">
                 <div>
@@ -423,12 +348,11 @@ export default function ChartPage() {
                     <span className="text-gray-300 text-lg sm:text-xl">
                       ${tokenData.symbol}
                     </span>
-                    <Badge className="bg-green-600 text-white rounded-lg px-3 py-1">
+                    <Badge className="bg-green-600 text-white h-6 px-2 text-xs">
                       LIVE DATA
                     </Badge>
                   </div>
                 </div>
-
                 {/* Contract Address */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <span className="text-sm text-gray-400 font-mono break-all">
@@ -438,44 +362,43 @@ export default function ChartPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-white rounded transition-all duration-200"
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-white transition-all duration-200"
                       onClick={copyContract}
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3 w-3" />
                     </Button>
                     {showCopied && (
                       <span className="text-xs text-green-400">Copied!</span>
                     )}
                   </div>
                 </div>
-
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white bg-transparent rounded-lg px-3 py-2 transition-all duration-200"
+                    className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white bg-transparent h-7 px-3 text-xs transition-all duration-200"
                     onClick={openDexScreener}
                   >
-                    <TrendingUp className="h-4 w-4 mr-2" />
+                    <TrendingUp className="h-3 w-3 mr-1" />
                     DexScreener
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white bg-transparent rounded-lg px-3 py-2 transition-all duration-200"
+                    className="border-purple-600 text-purple-400 hover:bg-purple-600 hover:text-white bg-transparent h-7 px-3 text-xs transition-all duration-200"
                     onClick={openRaydium}
                   >
-                    <ExternalLink className="h-4 w-4 mr-2" />
+                    <ExternalLink className="h-3 w-3 mr-1" />
                     Raydium
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white bg-transparent rounded-lg px-3 py-2 transition-all duration-200"
+                    className="border-yellow-600 text-yellow-400 hover:bg-yellow-600 hover:text-white bg-transparent h-7 px-3 text-xs transition-all duration-200"
                     onClick={openPumpFun}
                   >
-                    <MessageCircle className="h-4 w-4 mr-2" />
+                    <MessageCircle className="h-3 w-3 mr-1" />
                     Pump.fun
                   </Button>
                 </div>
@@ -496,7 +419,6 @@ export default function ChartPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-[#151A2C] border-gray-700 hover:bg-[#1A2137]/50 transition-all duration-200">
             <CardContent className="p-3 sm:p-4">
               <div className="space-y-1">
@@ -521,7 +443,6 @@ export default function ChartPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-[#151A2C] border-gray-700 hover:bg-[#1A2137]/50 transition-all duration-200">
             <CardContent className="p-3 sm:p-4">
               <div className="space-y-1">
@@ -532,7 +453,6 @@ export default function ChartPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-[#151A2C] border-gray-700 hover:bg-[#1A2137]/50 transition-all duration-200">
             <CardContent className="p-3 sm:p-4">
               <div className="space-y-1">
@@ -543,7 +463,6 @@ export default function ChartPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-[#151A2C] border-gray-700 hover:bg-[#1A2137]/50 transition-all duration-200">
             <CardContent className="p-3 sm:p-4">
               <div className="space-y-1">
@@ -554,17 +473,16 @@ export default function ChartPage() {
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-[#151A2C] border-gray-700 hover:bg-[#1A2137]/50 transition-all duration-200">
             <CardContent className="p-3 sm:p-4">
               <div className="space-y-1">
                 <p className="text-xs sm:text-sm text-gray-400">24h Txns</p>
                 <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
                   <span className="text-green-400 font-bold text-xs sm:text-sm">
-                    {tokenData.buys_24h}B
+                    {tokenData.transactions_24h.buys}B
                   </span>
                   <span className="text-red-400 font-bold text-xs sm:text-sm">
-                    {tokenData.sells_24h}S
+                    {tokenData.transactions_24h.sells}S
                   </span>
                 </div>
               </div>
@@ -582,7 +500,7 @@ export default function ChartPage() {
                   <span className="text-lg sm:text-xl text-white">
                     Live Chart - {tokenData.symbol}
                   </span>
-                  <Badge className="bg-blue-600 text-white rounded-lg px-3 py-1 w-fit">
+                  <Badge className="bg-blue-600 text-white h-6 px-2 text-xs w-fit">
                     TradingView
                   </Badge>
                 </CardTitle>
@@ -598,9 +516,9 @@ export default function ChartPage() {
             <Card className="bg-[#151A2C] border-gray-700 h-fit">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl text-white">
-                  <MessageCircle className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                  <MessageCircle className="h-4 w-4 text-blue-400 flex-shrink-0" />
                   <span>Telegram Calls</span>
-                  <Badge className="bg-green-600 text-white rounded-lg px-2 py-1">
+                  <Badge className="bg-green-600 text-white h-5 px-2 text-xs">
                     {tokenCalls.length}
                   </Badge>
                 </CardTitle>
@@ -611,12 +529,12 @@ export default function ChartPage() {
                     <CardContent className="p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                          <User className="h-3 w-3 text-blue-400 flex-shrink-0" />
                           <span className="text-sm font-semibold text-white truncate">
                             {call.caller_name}
                           </span>
                           <Badge
-                            className={`text-xs rounded-lg px-2 py-1 flex-shrink-0 ${
+                            className={`text-xs h-5 px-2 flex-shrink-0 ${
                               call.status === "mooned"
                                 ? "bg-green-600 text-white"
                                 : call.status === "rugged"
@@ -634,11 +552,9 @@ export default function ChartPage() {
                           </span>
                         </div>
                       </div>
-
                       <div className="text-xs text-gray-400 mb-3 break-words">
-                        📢 {call.group_name} (@{call.group_username})
+                        {call.group_name} (@{call.group_username})
                       </div>
-
                       <Card className="bg-[#0F1419] border-gray-700/30 mb-3">
                         <CardContent className="p-3">
                           <div className="text-sm text-gray-300 whitespace-pre-line break-words">
@@ -646,7 +562,6 @@ export default function ChartPage() {
                           </div>
                         </CardContent>
                       </Card>
-
                       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                         <div className="space-y-1">
                           <div>
@@ -683,11 +598,10 @@ export default function ChartPage() {
                           </div>
                         </div>
                       </div>
-
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="w-full text-blue-400 hover:text-blue-400/80 hover:bg-blue-400/10 rounded-lg transition-all duration-200"
+                        className="w-full text-blue-400 hover:text-blue-400/80 hover:bg-blue-400/10 h-7 text-xs transition-all duration-200"
                         onClick={() =>
                           window.open(
                             `https://t.me/${call.group_username}`,

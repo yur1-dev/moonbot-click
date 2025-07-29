@@ -1,8 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+// Define proper types for cache
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+interface GroupCacheData {
+  // Define the structure of your group cache data
+  [key: string]: unknown;
+}
+
 // Ultra-fast cache with group-specific data
-const tokenCache = new Map<string, any>();
-const groupCache = new Map<string, any>();
+const tokenCache = new Map<string, CacheEntry<TokenData>>();
+const groupCache = new Map<string, CacheEntry<GroupCacheData>>();
 const contractPool = new Map<string, string[]>(); // Group-specific contracts
 const CACHE_DURATION = 10000; // 10 seconds for ultra-fresh data
 
@@ -38,6 +49,73 @@ interface TokenData {
   twitter?: string;
   telegram?: string;
   website?: string;
+}
+
+interface DexScreenerPair {
+  baseToken?: {
+    symbol?: string;
+    name?: string;
+  };
+  priceUsd?: string;
+  marketCap?: string;
+  volume?: {
+    h24?: string;
+    m5?: string;
+    h1?: string;
+  };
+  priceChange?: {
+    h24?: string;
+    h1?: string;
+    m5?: string;
+  };
+  liquidity?: {
+    usd?: string;
+  };
+  txns?: {
+    h24?: {
+      buys?: string;
+      sells?: string;
+    };
+    h1?: {
+      buys?: string;
+      sells?: string;
+    };
+  };
+  fdv?: string;
+  pairCreatedAt?: string;
+  dexId?: string;
+  pairAddress?: string;
+}
+
+interface DexScreenerResponse {
+  pairs?: DexScreenerPair[];
+}
+
+interface PumpFunResponse {
+  symbol?: string;
+  name?: string;
+  usd_market_cap?: string;
+  total_supply?: string;
+  volume_24h?: string;
+  virtual_sol_reserves?: string;
+  created_timestamp?: number;
+  description?: string;
+  image_uri?: string;
+  twitter?: string;
+  telegram?: string;
+  website?: string;
+}
+
+interface Message {
+  id: number;
+  text: string;
+  from: {
+    username: string;
+    first_name: string;
+  };
+  date: string;
+  chat_id: string;
+  contracts: string[];
 }
 
 // Generate UNIQUE contracts for each group
@@ -123,7 +201,7 @@ async function getTokenDataFast(contract: string): Promise<TokenData | null> {
 
     // Try DexScreener first
     if (dexResponse.status === "fulfilled" && dexResponse.value.ok) {
-      const data = await dexResponse.value.json();
+      const data: DexScreenerResponse = await dexResponse.value.json();
       if (data.pairs && data.pairs.length > 0) {
         const pair = data.pairs[0];
         tokenData = {
@@ -186,7 +264,7 @@ async function getTokenDataFast(contract: string): Promise<TokenData | null> {
       pumpResponse.status === "fulfilled" &&
       pumpResponse.value.ok
     ) {
-      const data = await pumpResponse.value.json();
+      const data: PumpFunResponse = await pumpResponse.value.json();
       tokenData = {
         contract,
         symbol: data.symbol || "UNKNOWN",
@@ -231,8 +309,8 @@ async function getTokenDataFast(contract: string): Promise<TokenData | null> {
     }
 
     return tokenData;
-  } catch (error) {
-    console.error(`❌ Fast fetch failed for ${contract}:`, error);
+  } catch {
+    console.error(`❌ Fast fetch failed for ${contract}`);
     return null;
   }
 }
@@ -242,7 +320,7 @@ function generateUniqueMessages(
   groupId: string,
   contracts: string[],
   timeframe: string
-) {
+): Message[] {
   const groupHash = hashString(groupId);
   const now = Date.now();
 
@@ -290,7 +368,7 @@ function generateUniqueMessages(
     `🔥 ${groupId} EXCLUSIVE FIND\n{contract}\n💎 Hidden gem discovered by our scouts\n💎 Liquidity locked for 1 year\n💎 Team fully doxxed\n💎 Roadmap looks incredible\n📈 This is going to 1000x! Don't miss out!`,
   ];
 
-  const messages = [];
+  const messages: Message[] = [];
 
   for (let i = 0; i < numMessages; i++) {
     const contract = contracts[i % contracts.length];

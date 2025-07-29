@@ -32,7 +32,7 @@ export interface GroupData {
   rank: number;
   name: string;
   members: number;
-  launched: number;
+  drops: number; // Make sure this is 'drops' not 'launched'
   avgPump: string;
   best: string;
   worst: string;
@@ -44,4 +44,55 @@ export interface GroupData {
   telegram_link?: string;
   avatar?: string;
   stats?: GroupStats;
+}
+
+export interface SolanaProvider {
+  isPhantom?: boolean;
+  connect: (options?: {
+    onlyIfTrusted?: boolean;
+  }) => Promise<{ publicKey: { toString(): string } }>;
+  disconnect: () => Promise<void>;
+  on: (event: string, callback: (args: unknown) => void) => void;
+  off?: (event: string, callback: (args: unknown) => void) => void;
+  publicKey?: { toString(): string };
+  isConnected?: boolean;
+}
+
+export interface SolflareProvider {
+  isSolflare?: boolean;
+  connect: (options?: {
+    onlyIfTrusted?: boolean;
+  }) => Promise<{ publicKey: { toString(): string } }>;
+  disconnect: () => Promise<void>;
+  on?: (event: string, callback: (args: unknown) => void) => void;
+  off?: (event: string, callback: (args: unknown) => void) => void;
+  publicKey?: { toString(): string };
+  isConnected?: boolean;
+}
+
+declare global {
+  interface Window {
+    solana?: SolanaProvider;
+    solflare?: SolflareProvider;
+  }
+}
+
+export type WalletType = "Phantom" | "Solflare" | "Ledger";
+export type NetworkType = "solana";
+
+export interface WalletInfo {
+  address: string;
+  balance: string;
+  network: NetworkType;
+  walletType: WalletType;
+  networkName?: string;
+  symbol?: string;
+  username?: string | null;
+  explorer?: string;
+}
+
+export interface WalletError {
+  code?: number;
+  message: string;
+  data?: unknown;
 }
